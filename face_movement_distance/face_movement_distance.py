@@ -5,6 +5,11 @@ import csv
 def get_movement_distance(cap, frame_interval):
     cur_frame = 1.0
     last_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT) - 30
+    if last_frame < 0:
+        writer.writerow(cur)
+
+    stack=''
+
     while cur_frame <= last_frame:
         cap.set(cv2.CAP_PROP_POS_FRAMES, cur_frame)
         ret, frame = cap.read()
@@ -16,20 +21,31 @@ def get_movement_distance(cap, frame_interval):
         if len(faces):
             for (x, y, w, h) in faces:
                 p = str(x) + ', ' + str(y)
-                print(p)
+                stack += '[' + p + '] '
+
+        if len(faces)==0:
+            stack += '[' + '0, 0] '
         k = cv2.waitKey(30) & 0xff
         if k == 27 or k == ord('q'):  # Esc 키를 누르면 종료
             break
         cur_frame += frame_interval
+    writer.writerow(cur + [stack])
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+f=open('../csv_data/result.csv', encoding='utf-8-sig')
+using_list = csv.reader(f)
+next(using_list)
 base = '../data/'
-file_name='sample.avi'
-cap = cv2.VideoCapture(base + file_name)
-frame_interval = 100
-f = open(base+file_name, 'w', encoding='utf-8-sig')
-writer = csv.writer(f)
 
-get_movement_distance(cap, frame_interval)
+f1=open('../csv_data/result_frame100.csv', 'w', encoding='utf-8-sig')
+writer = csv.writer(f1)
 
+for cur in using_list:
+    file_name=cur[0]
+    print(file_name)
+    cap = cv2.VideoCapture(base + file_name)
+    frame_interval = 100
+    get_movement_distance(cap, frame_interval)
 
+f.close()
