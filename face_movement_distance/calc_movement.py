@@ -2,13 +2,13 @@ import csv
 import numpy as np
 import pandas as pd
 
-result = pd.read_csv('../csv_data/result_frame100.csv', encoding='utf-8-sig')
+result = pd.read_csv('../csv_data/frame100.csv', encoding='utf-8-sig')
 result = result.set_index('파일 이름')
 idx=result.index
 
-f=open('../csv_data/result_frame100_movement.csv', 'w', encoding='utf-8-sig', newline='')
+f=open('../csv_data/frame100_movement.csv', 'w', encoding='utf-8-sig', newline='')
 writer = csv.writer(f)
-writer.writerow(['파일 이름', 'frame', '이해도 평가', '실제 이해도', 'movement_x', 'movement_y', 'non_detect'])
+writer.writerow(['파일 이름', '이름', 'frame', '이해도 평가', '실제 이해도', 'movement_x', 'movement_y', 'non_detect'])
 
 for cur_idx in idx:
     temp = result.loc[cur_idx]['데이터']
@@ -32,7 +32,7 @@ for cur_idx in idx:
         prev_x=x
         prev_y=y
 
-    res=[cur_idx, result.loc[cur_idx]['frame'], result.loc[cur_idx]['이해도 평가'],
+    res=[cur_idx, result.loc[cur_idx]['이름'], result.loc[cur_idx]['frame'], result.loc[cur_idx]['이해도 평가'],
          result.loc[cur_idx]['실제 이해도'], move_x,
          move_y, non_detect]
     writer.writerow(res)

@@ -40,7 +40,7 @@ using_list = csv.reader(f)
 next(using_list)
 base = '../data/'
 
-f1=open('../csv_data/result_frame100.csv', 'w', encoding='utf-8-sig', newline='')
+f1=open('../csv_data/frame100.csv', 'w', encoding='utf-8-sig', newline='')
 writer = csv.writer(f1)
 writer.writerow(['파일 이름', '이름', '문제 번호', '이해도 평가', '실제 이해도', 'frame', '데이터'])
 
