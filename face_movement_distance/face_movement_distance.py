@@ -1,13 +1,14 @@
 import numpy as np
 import cv2
 import csv
+import time
 
 def get_movement_distance(cap, frame_interval):
     cur_frame = 1.0
     last_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT) - 30
     if last_frame < 0:
         writer.writerow(cur)
-
+    cnt=1
     stack=''
 
     while cur_frame <= last_frame:
@@ -19,6 +20,7 @@ def get_movement_distance(cap, frame_interval):
         faces = face_cascade.detectMultiScale(gray, 1.05, 5)
 
         if len(faces):
+            cnt+=1
             for (x, y, w, h) in faces:
                 p = str(x) + ', ' + str(y)
                 stack += '[' + p + '] '
@@ -29,7 +31,7 @@ def get_movement_distance(cap, frame_interval):
         if k == 27 or k == ord('q'):  # Esc 키를 누르면 종료
             break
         cur_frame += frame_interval
-    writer.writerow(cur + [stack])
+    writer.writerow(cur + [cnt, stack])
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -38,9 +40,11 @@ using_list = csv.reader(f)
 next(using_list)
 base = '../data/'
 
-f1=open('../csv_data/result_frame100.csv', 'w', encoding='utf-8-sig')
+f1=open('../csv_data/result_frame100.csv', 'w', encoding='utf-8-sig', newline='')
 writer = csv.writer(f1)
+writer.writerow(['파일 이름', '이름', '문제 번호', '이해도 평가', '실제 이해도', 'frame', '데이터'])
 
+prev = time.time()
 for cur in using_list:
     file_name=cur[0]
     print(file_name)
@@ -48,4 +52,5 @@ for cur in using_list:
     frame_interval = 100
     get_movement_distance(cap, frame_interval)
 
+print(time.time() - prev)
 f.close()
