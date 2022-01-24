@@ -20,7 +20,6 @@ def get_movement_distance(cap, frame_interval):
         faces = face_cascade.detectMultiScale(gray, 1.05, 5)
 
         if len(faces):
-
             for (x, y, w, h) in faces:
                 p = str(x) + ', ' + str(y)
                 stack += '[' + p + '] '
@@ -40,7 +39,7 @@ f=open('../csv_data/result.csv', encoding='utf-8-sig')
 using_list = csv.reader(f)
 next(using_list)
 base = '../data/'
-frame_interval = 10
+frame_interval = 100
 f1=open('../csv_data/frame{}.csv'.format(frame_interval), 'w', encoding='utf-8-sig', newline='')
 writer = csv.writer(f1)
 writer.writerow(['파일 이름', '이름', '문제 번호', '이해도 평가', '실제 이해도', 'frame', '데이터'])
