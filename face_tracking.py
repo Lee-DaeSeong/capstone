@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-face_cascade = cv2.CascadeClassifier('C:\\Users\\wnsdl\\Downloads\\haarcascade_frontface.xml')
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 cap = cv2.VideoCapture(0)  # 노트북 웹캠을 카메라로 사용
 cap.set(3, 640)  # 너비
