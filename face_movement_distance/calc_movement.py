@@ -2,11 +2,11 @@ import csv
 import numpy as np
 import pandas as pd
 frame_interval=50
-result = pd.read_csv('../csv_data/frame{}.csv'.format(frame_interval), encoding='utf-8-sig')
+result = pd.read_csv('csv_data/frame{}.csv'.format(frame_interval), encoding='utf-8-sig')
 result = result.set_index('파일 이름')
 idx=result.index
 
-f=open('../csv_data/frame{}_movement.csv'.format(frame_interval), 'w', encoding='utf-8-sig', newline='')
+f=open('csv_data/frame{}_movement.csv'.format(frame_interval), 'w', encoding='utf-8-sig', newline='')
 writer = csv.writer(f)
 writer.writerow(['파일 이름', '이름', 'frame', '이해도 평가', '실제 이해도', 'movement_x', 'movement_y', 'non_detect', 'base_x', 'base_y'])
 
