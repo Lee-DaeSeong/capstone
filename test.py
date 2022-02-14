@@ -1,5 +1,5 @@
 import cv2
-from gaze_tracking import GazeTracking
+from gaze_tracking.gaze_tracking import GazeTracking
 
 face_cascade = cv2.CascadeClassifier('./face_movement/haarcascade_frontface.xml')
 gaze = GazeTracking()
