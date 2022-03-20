@@ -1,29 +1,90 @@
+import collections
 import cv2
 from gaze_tracking.gaze_tracking import GazeTracking
 
 face_cascade = cv2.CascadeClassifier('./face_movement/haarcascade_frontface.xml')
+
+cap = cv2.VideoCapture(0)
+cap.set(3, 640)
+cap.set(4, 480)
 gaze = GazeTracking()
+prev_x, prev_y, cur_x, cur_y = 0, 0, 0, 0
 
-cap = cv2.VideoCapture(0)  # 노트북 웹캠을 카메라로 사용
-cap.set(3, 640)  # 너비
-cap.set(4, 480)  # 높이
-
-ret, frame = cap.read()
-faces = face_cascade.detectMultiScale(frame, 1.05, 5)
-prev_x, prev_y = 0, 0
-move=0
-prev=0
-detect = False
-frame_cnt=0
-res=0
-prev_time=0
-while (True):
+while True:
     ret, frame = cap.read()
-    frame = cv2.flip(frame, 1)  # 좌우 대칭
+    frame = cv2.flip(frame, 1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gaze.refresh(frame)
-    frame = gaze.annotated_frame()
-    text = ""
+    faces = face_cascade.detectMultiScale(gray, 1.05, 5)
+    if len(faces):
+        prev_x, prev_y = faces[0][0], faces[0][1]
+
+    frame = cv2.flip(frame, 1)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.05, 5)
+    if len(faces):
+        cur_x, cur_y = faces[0][0], faces[0][1]
+
+    if prev_x and cur_x:
+        break
+
+move = 0
+prev = abs(prev_x - cur_x) + abs(prev_y - cur_y)
+move_frame_cnt = 0
+move_q = collections.deque()
+move_window_size = 4
+max_frame_size = 5
+min_movement = 10000
+gaze_frame_cnt = 0
+gaze_center = 0
+
+def calc_move_point():
+    global move
+    global prev
+    global move_frame_cnt
+    global min_movement
+    move_q.append(move)
+
+    if len(move_q) == move_window_size:
+        move = move_q[0] * 0.1
+        move += move_q[1] * 0.1
+        move += move_q[2] * 0.3
+        move += move_q[3] * 0.5
+        move_q.popleft()
+
+    if move > (prev * 1.43) or move > min_movement * 5:
+        print('move :', 0)
+    elif move > (prev * 1.22):
+        print('move :', 1)
+    else:
+        print('move :', 2)
+
+    min_movement = min(min_movement, move)
+    prev = move
+    move_frame_cnt = 0
+    move = 0
+
+def calc_gaze_point():
+    global gaze_frame_cnt
+    global gaze_center
+
+    calc_gaze = gaze_center / gaze_frame_cnt
+
+    gaze_frame_cnt = 0
+    gaze_center = 0
+
+    # 0.828, 0.719, 0.582
+
+    if calc_gaze > 0.828:
+        print('gaze :', 2)
+    elif calc_gaze > 0.719:
+        print('gaze :', 1)
+    else:  # 0.582
+        print('gaze :', 0)
+
+while True:
+    ret, frame = cap.read()
+    frame = cv2.flip(frame, 1)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.05, 5)
     cur_x, cur_y = 0, 0
     if len(faces):
@@ -33,49 +94,39 @@ while (True):
             cv2.putText(frame, p, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
             cur_x, cur_y = x, y
 
-            move += abs(prev_x-cur_x) + abs(prev_y-cur_y)
+            move += abs(prev_x - cur_x) + abs(prev_y - cur_y)
+            if move_frame_cnt == max_frame_size:
+                calc_move_point()
 
-            if frame_cnt == 50:
-                print(move, prev, prev*1.45)
-                if move > (prev * 1.48):
-                    print(0)
-                elif move > (prev * 1.28):
-                    print(1)
-                else:
-                    print(2)
-                prev = move
-                frame_cnt=0
-                move=0
-                res=0
-            frame_cnt+=1
-            detect=True
-    else:
-        prev_x, prev_y = 0, 0
-        detect = False
-    if detect:
-        prev_x, prev_y = cur_x, cur_y
+            move_frame_cnt += 1
+            prev_x, prev_y = cur_x, cur_y
 
+    gaze.refresh(frame)
+    frame = gaze.annotated_frame()
     text = ""
 
-    if gaze.is_blinking():
-        text = "Blinking"
-    elif gaze.is_right():
-        text = "Looking right"
-    elif gaze.is_left():
-        text = "Looking left"
+    if gaze.is_left():
+        text = 'left'
+        gaze_frame_cnt += 1
+
+    if gaze.is_right():
+        text = 'right'
+        gaze_frame_cnt += 1
+
     elif gaze.is_center():
-        text = "Looking center"
+        text = 'center'
+        gaze_frame_cnt += 1
+        gaze_center += 1
 
-    cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
+    if gaze_frame_cnt == max_frame_size:
+        calc_gaze_point()
 
-    left_pupil = gaze.pupil_left_coords()
-    right_pupil = gaze.pupil_right_coords()
-    cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
-    cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
+    cv2.putText(frame, text, (90, 120), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
+
     cv2.imshow('result', frame)
 
     k = cv2.waitKey(30) & 0xff
-    if k == 27 or k == ord('q'):  # Esc 키를 누르면 종료
+    if k == 27 or k == ord('q'):
         break
 
 cap.release()
